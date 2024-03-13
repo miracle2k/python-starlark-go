@@ -5,6 +5,15 @@
 [![Documentation Status](https://readthedocs.org/projects/python-starlark-go/badge/?version=latest)](https://python-starlark-go.readthedocs.io/en/latest/?badge=latest)
 [![action-bumpr supported](https://img.shields.io/badge/bumpr-supported-ff69b4?logo=github&link=https://github.com/haya14busa/action-bumpr)](https://github.com/haya14busa/action-bumpr)
 
+##
+
+Fork that adds:
+
+- Support for load()
+- Support for injecting Python functions into the VM
+- Includes the struct patch from romain-h/monzo
+
+
 ## Introduction
 
 This module provides Python bindings for the Starlark programming language.
