@@ -559,6 +559,7 @@ int cgoPyStarlarkInstance_Check(PyObject *obj)
 {
   /* Necessary because Cgo can't do macros */
   return PyObject_TypeCheck(obj, &StarlarkType);
+}
 
 /* Helper to fetch exception classes */
 static PyObject *get_exception_class(PyObject *errors, const char *name)
