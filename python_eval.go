@@ -108,6 +108,22 @@ func Starlark_exec(self *C.Starlark, args *C.PyObject, kwargs *C.PyObject) *C.Py
 		pyThread = C.PyEval_SaveThread()
 	}
 
+	starlarkLoad := func(thread *starlark.Thread, filenameToLoad string) (starlark.StringDict, error) {
+		C.PyEval_RestoreThread(pyThread)
+		defer func() {
+			pyThread = C.PyEval_SaveThread()
+		}()
+
+		var parentFilename *string
+		if filename != nil {
+			parentFilename = &goFilename
+		} else {
+			parentFilename = nil
+		}
+
+		return callPythonLoad(state.Load, filenameToLoad, parentFilename)
+	}
+
 	_, program, err := starlark.SourceProgram(goFilename, goDefs, state.Globals.Has)
 	if err != nil {
 		C.PyEval_RestoreThread(pyThread)
@@ -115,7 +131,7 @@ func Starlark_exec(self *C.Starlark, args *C.PyObject, kwargs *C.PyObject) *C.Py
 		return nil
 	}
 
-	thread := &starlark.Thread{Print: starlarkPrint}
+	thread := &starlark.Thread{Print: starlarkPrint, Load: starlarkLoad}
 	newGlobals, err := program.Init(thread, state.Globals)
 	C.PyEval_RestoreThread(pyThread)
 

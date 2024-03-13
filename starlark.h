@@ -19,7 +19,7 @@ Starlark *starlarkAlloc(PyTypeObject *type);
 void starlarkFree(Starlark *self);
 
 int parseInitArgs(
-    PyObject *args, PyObject *kwargs, PyObject **globals, PyObject **print
+    PyObject *args, PyObject *kwargs, PyObject **globals, PyObject **print, PyObject **load
 );
 
 int parseEvalArgs(
@@ -95,5 +95,7 @@ int cgoPyDict_Check(PyObject *obj);
 int cgoPyList_Check(PyObject *obj);
 
 int cgoPySimpleNamespace_Check(PyObject *obj);
+
+int cgoPyStarlarkInstance_Check(PyObject *obj);
 
 #endif /* PYTHON_STARLARK_GO_H */

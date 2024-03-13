@@ -25,6 +25,7 @@ type StarlarkState struct {
 	Globals starlark.StringDict
 	Mutex   sync.RWMutex
 	Print   *C.PyObject
+	Load    *C.PyObject
 }
 
 //export ConfigureStarlark
@@ -83,13 +84,20 @@ func Starlark_new(pytype *C.PyTypeObject, args *C.PyObject, kwargs *C.PyObject) 
 func Starlark_init(self *C.Starlark, args *C.PyObject, kwargs *C.PyObject) C.int {
 	var globals *C.PyObject = nil
 	var print *C.PyObject = nil
+	var load *C.PyObject = nil
 
-	if C.parseInitArgs(args, kwargs, &globals, &print) == 0 {
+	if C.parseInitArgs(args, kwargs, &globals, &print, &load) == 0 {
 		return -1
 	}
 
 	if print != nil {
 		if Starlark_set_print(self, print, nil) != 0 {
+			return -1
+		}
+	}
+
+	if load != nil {
+		if Starlark_set_load(self, load, nil) != 0 {
 			return -1
 		}
 	}
@@ -123,6 +131,9 @@ func Starlark_dealloc(self *C.Starlark) {
 
 	if state.Print != nil {
 		C.Py_DecRef(state.Print)
+	}
+	if state.Load != nil {
+		C.Py_DecRef(state.Load)
 	}
 
 	C.starlarkFree(self)

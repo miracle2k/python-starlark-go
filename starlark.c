@@ -14,6 +14,8 @@ PyObject *Starlark_set_globals(Starlark *self, PyObject *args, PyObject **kwargs
 PyObject *Starlark_pop_global(Starlark *self, PyObject *args, PyObject **kwargs);
 PyObject *Starlark_get_print(Starlark *self, void *closure);
 int Starlark_set_print(Starlark *self, PyObject *value, void *closure);
+PyObject *Starlark_get_load(Starlark *self, void *closure);
+int Starlark_set_load(Starlark *self, PyObject *value, void *closure);
 PyObject *Starlark_tp_iter(Starlark *self);
 
 /* Exceptions - the module init function will fill these in */
@@ -77,7 +79,7 @@ PyDoc_STRVAR(
 );
 
 /* Argument names and documentation for our methods */
-static char *init_keywords[] = {"globals", "print", NULL};
+static char *init_keywords[] = {"globals", "print", "load", NULL};
 
 PyDoc_STRVAR(
     Starlark_init_doc,
@@ -262,6 +264,14 @@ PyDoc_STRVAR(
     ":type: typing.Callable[[str], typing.Any]\n"
 );
 
+PyDoc_STRVAR(
+    Starlark_load_doc,
+    "A function to call in place of Starlark's ``print()`` function. If "
+    "unspecified, Starlark's ``print()`` function will be forwarded to Python's "
+    "built-in :py:func:`python:print`.\n\n"
+    ":type: typing.Callable[[str], typing.Any]\n"
+);
+
 /* Container for module methods */
 static PyMethodDef module_methods[] = {
     {"configure_starlark",
@@ -302,6 +312,15 @@ static PyGetSetDef Starlark_getset[] = {
      (getter)Starlark_get_print,
      (setter)Starlark_set_print,
      Starlark_print_doc,
+     NULL},
+    {NULL},
+};
+
+static PyGetSetDef Starlark_getset_load[] = {
+    {"load",
+     (getter)Starlark_get_load,
+     (setter)Starlark_set_load,
+     Starlark_load_doc,
      NULL},
     {NULL},
 };
@@ -348,13 +367,13 @@ void starlarkFree(Starlark *self)
 
 /* Helpers to parse method arguments */
 int parseInitArgs(
-    PyObject *args, PyObject *kwargs, PyObject **globals, PyObject **print
+    PyObject *args, PyObject *kwargs, PyObject **globals, PyObject **print, PyObject **load
 )
 {
   /* Necessary because Cgo can't do varargs */
   /* One optional object */
   return PyArg_ParseTupleAndKeywords(
-      args, kwargs, "|$OO:Starlark", init_keywords, globals, print
+      args, kwargs, "|$OOO:Starlark", init_keywords, globals, print, load
   );
 }
 
@@ -535,6 +554,11 @@ int cgoPySimpleNamespace_Check(PyObject *obj)
   /* Necessary because Cgo can't do macros */
   return PyObject_TypeCheck(obj, &_PyNamespace_Type);
 }
+
+int cgoPyStarlarkInstance_Check(PyObject *obj)
+{
+  /* Necessary because Cgo can't do macros */
+  return PyObject_TypeCheck(obj, &StarlarkType);
 
 /* Helper to fetch exception classes */
 static PyObject *get_exception_class(PyObject *errors, const char *name)
