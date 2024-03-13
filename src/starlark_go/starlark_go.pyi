@@ -13,6 +13,7 @@ class Starlark:
         *,
         globals: Optional[Mapping[str, Any]] = ...,
         print: Callable[[str], Any] = ...,
+        load: Callable[[str], Any] = ...,
     ) -> None: ...
     def eval(
         self,
