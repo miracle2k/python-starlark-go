@@ -1,10 +1,9 @@
 package main
 
-/*
-#include "starlark.h"
-
-extern PyObject *ConversionToPythonFailed;
-*/
+// #include "starlark.h"
+// extern PyObject *ConversionToPythonFailed;
+// static PyObject* get_simple_namespace_type(void);
+//
 import "C"
 
 import (
@@ -146,7 +145,14 @@ func starlarkStructToPython(x starlarkstruct.Struct) (*C.PyObject, error) {
 		C.PyDict_SetItem(dict, ckey, value)
 	}
 
-	ns := C._PyNamespace_New(dict)
+	ns := dictToSimpleNamespace(dict)
+	// We don't need the dict reference anymore
+	C.Py_DecRef(dict)
+
+	if ns == nil {
+		return nil, fmt.Errorf("failed to create SimpleNamespace")
+	}
+
 	return ns, nil
 }
 
@@ -232,4 +238,29 @@ func starlarkValueToPython(x starlark.Value) (*C.PyObject, error) {
 	}
 
 	return value, nil
+}
+
+// dictToSimpleNamespace takes a PyDict object and returns a new SimpleNamespace(**dict), or NULL on error.
+func dictToSimpleNamespace(dict *C.PyObject) *C.PyObject {
+	nsType := C.get_simple_namespace_type()
+	if nsType == nil {
+		// The Python error is already set (ImportError, AttributeError, etc.)
+		return nil
+	}
+	defer C.Py_DecRef(nsType)
+
+	args := C.PyTuple_New(0)
+	if args == nil {
+		C.PyErr_Print()
+		return nil
+	}
+	defer C.Py_DecRef(args)
+
+	// Call nsType(**dict) with no positional args.
+	ns := C.PyObject_Call(nsType, args, dict)
+	if ns == nil {
+		C.PyErr_Print()
+		return nil
+	}
+	return ns
 }

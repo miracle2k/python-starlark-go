@@ -549,10 +549,42 @@ int cgoPyList_Check(PyObject *obj)
   return PyList_Check(obj);
 }
 
+// Provide a small helper function to retrieve/cache the SimpleNamespace type.
+static PyObject* get_simple_namespace_type(void) {
+    static PyObject* cached_simple_namespace_type = NULL;
+
+    // If not yet cached, import "types" and fetch SimpleNamespace.
+    if (cached_simple_namespace_type == NULL) {
+        PyObject* types_mod = PyImport_ImportModule("types");
+        if (!types_mod) {
+            // PyErr is already set by PyImport_ImportModule, but you can also set a custom error if you like.
+            return NULL;
+        }
+
+        cached_simple_namespace_type = PyObject_GetAttrString(types_mod, "SimpleNamespace");
+        Py_DECREF(types_mod);
+
+        if (!cached_simple_namespace_type) {
+            PyErr_SetString(PyExc_AttributeError, "Could not get SimpleNamespace from 'types' module");
+            return NULL;
+        }
+    }
+
+    // Return a (new) reference so callers don't need to Py_INCREF it again.
+    Py_INCREF(cached_simple_namespace_type);
+    return cached_simple_namespace_type;
+}
+
 int cgoPySimpleNamespace_Check(PyObject *obj)
 {
-  /* Necessary because Cgo can't do macros */
-  return PyObject_TypeCheck(obj, &_PyNamespace_Type);
+    PyObject* sns_type = get_simple_namespace_type();
+    if (!sns_type) {
+        return 0; // An error is set, or we couldn't get the module
+    }
+
+    int result = PyObject_IsInstance(obj, sns_type);
+    Py_DECREF(sns_type);  // release our reference
+    return result;
 }
 
 int cgoPyStarlarkInstance_Check(PyObject *obj)
