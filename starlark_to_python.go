@@ -2,7 +2,7 @@ package main
 
 // #include "starlark.h"
 // extern PyObject *ConversionToPythonFailed;
-// static PyObject* get_simple_namespace_type(void);
+// extern PyObject* get_simple_namespace_type(void);
 //
 import "C"
 

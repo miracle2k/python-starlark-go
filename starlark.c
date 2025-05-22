@@ -550,7 +550,7 @@ int cgoPyList_Check(PyObject *obj)
 }
 
 // Provide a small helper function to retrieve/cache the SimpleNamespace type.
-static PyObject* get_simple_namespace_type(void) {
+PyObject* get_simple_namespace_type(void) {
     static PyObject* cached_simple_namespace_type = NULL;
 
     // If not yet cached, import "types" and fetch SimpleNamespace.
